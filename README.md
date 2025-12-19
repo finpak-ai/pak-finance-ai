@@ -17,7 +17,7 @@ Tech Stack (MVP)
 Contributors
 
 - Muhammad Abdullah — Backend, Frontend, System Design
-- AI Engineer — AI Models & Insights
+- Muhammad Faheem — AI Models & Insights
 
 Status
 
