@@ -1,6 +1,5 @@
-from sqlite3.dbapi2 import Cursor
 from fastapi import APIRouter, HTTPException
-from app.schemas.user import UserRegister, UserResponse
+from app.schemas.user import UserRegister, UserResponse, UserLogin
 from app.core import security
 from app.db import database
 
@@ -8,15 +7,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserResponse)
 def register(user: UserRegister):
-    conn = database.get_conncetion()
+    conn = database.get_connection()
     cursor = conn.cursor()
 
     # Check if email already exists
     cursor.execute("SELECT * FROM users WHERE email = ?", (user.email,))
-    existing_user = cursor.fetchone()
-
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Email already registerd")
 
     # Hash password
     hashed_password = security.hash_password(user.password)
@@ -33,3 +31,20 @@ def register(user: UserRegister):
 
 
     return UserResponse(id=user_id, email=user.email)
+
+@router.post("/login")
+def login(user: UserLogin):
+    conn = database.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE email = ?", (user.email,))
+    db_user = cursor.fetchone()
+    conn.close()
+
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    if not security.verify_password(user.password, db_user["password"]):
+        raise HTTPException(status=401, detail="Invalid credintial")
+
+    return {"message": "Login successful"}
