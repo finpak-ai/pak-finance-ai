@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.user import UserRegister, UserResponse, UserLogin
 from app.core import security
 from app.db import database
+from app.core.jwt import create_access_token
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -47,4 +49,9 @@ def login(user: UserLogin):
     if not security.verify_password(user.password, db_user["password"]):
         raise HTTPException(status=401, detail="Invalid credintial")
 
-    return {"message": "Login successful"}
+    access_token = create_access_token({"sub": db_user["email"]})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
