@@ -55,3 +55,10 @@ def login(user: UserLogin):
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+    from app.core.deps import get_current_user
+    from fastapi import Depends
+
+    @router.get("/me")
+    def me(current_user: str = Depends(get_current_user)):
+        return {"email": current_user}
